@@ -53,6 +53,7 @@ class ticTacToe {
     this.tie = false
     this.invalidMove = false
     this.moveCounter = 0
+    this.winner = null
   }
 
   nextPlayer () {
@@ -66,7 +67,6 @@ class ticTacToe {
     inquirer.prompt(questions.play(this.currentPlayer)).then(answer => {
       let validMove
       let gameOver = false
-      let winner = null
 
       if (answer.choice.length && this.isEmpty(answer.choice)) {
         validMove = true
@@ -75,7 +75,7 @@ class ticTacToe {
 
       // check if game is over
       if (validMove) {
-        ({ gameOver, winner } = this.checkWinner(this.currentPlayer, answer.choice))
+        gameOver = this.checkWinner(this.currentPlayer, answer.choice)
       }
 
       !this.noClear && this.header()
@@ -87,7 +87,7 @@ class ticTacToe {
         this.currentPlayer = this.nextPlayer()
         this.invalidMove = false
         this.displayBoard()
-        winner ? console.log(`${this.color(winner)} wins.\n`) : console.log('It\'s a tie.\n')
+        this.winner ? console.log(`${this.color(this.winner)} wins.\n`) : console.log('It\'s a tie.\n')
 
         inquirer.prompt(questions.playAgain()).then(answer => {
           if (answer.choice.match(/^y|yes/i)) {
@@ -110,12 +110,11 @@ class ticTacToe {
   checkWinner (player, colRow) {
     log('checkWinner', player, colRow)
     let gameOver = false
-    let winner = null
 
     let index = this.getIndex(colRow)
     if (this.checkRow(player, index) || this.checkCol(player, index) || this.checkDiag(player, index)) {
       gameOver = true
-      winner = player
+      this.winner = player
     } else if (!this.checkPossibilities(this.currentPlayer, this.nextPlayer())) {
       log('no more possibilities')
       //gameOver = true // we could stop the game here
@@ -126,7 +125,7 @@ class ticTacToe {
       gameOver = true
     }
 
-    return { gameOver, winner }
+    return gameOver
   }
 
   checkRow (player, index) {
@@ -227,34 +226,43 @@ class ticTacToe {
 
   displayBoard () {
     process.stdout.write(`\nCurrent Board:\n`)
-    process.stdout.write('\n    A   B   C')
+    process.stdout.write('\n   ')
+    for (let c = 65; c < 65 + this.size; c++) {
+      process.stdout.write(`   ${String.fromCharCode(c)}`)
+    }
     for (let i = 0; i < this.size; i++) {
-      process.stdout.write(`\n  +---+---+---+\n${i+1} |`)
+      process.stdout.write('\n    ')
+      for (let k = 0; k < this.size; k++) {
+        process.stdout.write('+---')
+      }
+      process.stdout.write(`+\n  ${i+1} |`)
       for (let j = 0; j < this.size; j++) {
-        process.stdout.write(` ${this.color(this.board[i * 3 + j])} |`)
+        process.stdout.write(` ${this.color(this.board[i * this.size + j])} |`)
       }
-      if (this.tie && i === Math.floor(this.size / 2) - 1) {
-        process.stdout.write(chalk.red('   Tie detected!'))
+      if (i === Math.floor((this.size - 1) / 2) - 1) {
+        this.tie && process.stdout.write(chalk.red('   Tie detected!'))
+        this.invalidMove && process.stdout.write(chalk.red('   Invalid move, try again...'))
       }
-      if (this.invalidMove & i === Math.floor(this.size / 2) - 1) {
-        process.stdout.write(chalk.red('   Invalid move, try again...'))
-      }
-      if (i === Math.floor(this.size / 2)) {
+      if (!this.winner && i === Math.floor((this.size - 1) / 2)) {
         process.stdout.write(`   Player: ${this.color(this.currentPlayer)}`)
       }
     }
-    process.stdout.write('\n  +---+---+---+\n\n')
+    process.stdout.write('\n    ')
+    for (let k = 0; k < this.size; k++) {
+      process.stdout.write('+---')
+    }
+    process.stdout.write('+\n\n')
   }
 
   getIndex (colRow) {
     colRow = colRow.toUpperCase()
     let col = colRow.charCodeAt(0) - 65
     let row = colRow.charCodeAt(1) - 49
-    if (col < 0 || col > 3 || row < 0 || row > 3) {
+    if (col < 0 || col > this.size || row < 0 || row > this.size) {
       return null
     }
 
-    return col + row * 3
+    return col + row * this.size
   }
 
   isEmpty (colRow) {
@@ -262,5 +270,5 @@ class ticTacToe {
   }
 }
 
-const game = new ticTacToe()
+const game = new ticTacToe() // tie detection only works with n = 3
 game.play()

@@ -10,38 +10,31 @@ const log = debug('ticTacToe:log');
 const info = debug('ticTacToe:info');
 const error = debug('ticTacToe:error');
 
-const questions = {
-  play: player => [ {
-    name: 'choice',
-    type: 'input',
-    message: `Player ${player}, please enter a free column/row location (e.g. A1): `,
-  } ],
-
-  playAgain: () => [ {
-    name: 'choice',
-    type: 'input',
-    message: 'Would you like to play again? ',
-  } ],
-}
-
 class ticTacToe {
   constructor (size = 3) {
     this.size = size
     this.noClear = false // set to true to prevent screen clear after each move
     this.init()
+    this.questions = {
+      play: player => [ {
+        name: 'choice',
+        type: 'input',
+        message: `Player ${player}, please enter a free column/row location (e.g. A1): `,
+      } ],
+      playAgain: () => [ {
+        name: 'choice',
+        type: 'input',
+        message: 'Would you like to play again? ',
+      } ],
+    }
   }
 
-  // Game header
-  header () {
+  header () { // game header
     clear()
-    console.log(
-      chalk.yellow(
-        figlet.textSync('Tic-tac-toe', { horizontalLayout: 'full' })
-      )
-    )
+    console.log(chalk.yellow(figlet.textSync('Tic-tac-toe', { horizontalLayout: 'full' })))
   }
 
-  color (c) {
+  color (c) { // color pieces
     return c === 'X' ? chalk.red(c) : chalk.green(c)
   }
 
@@ -56,18 +49,19 @@ class ticTacToe {
     this.winner = null
   }
 
-  nextPlayer () {
+  nextPlayer () { // get next player
     return this.currentPlayer === 'X' ? 'O' : 'X'
   }
 
-  play () {
+  play () { // play game
     this.displayBoard()
 
     // get user input
-    inquirer.prompt(questions.play(this.currentPlayer)).then(answer => {
+    inquirer.prompt(this.questions.play(this.currentPlayer)).then(answer => {
       let validMove
       let gameOver = false
 
+      // is it a valid move?
       if (answer.choice.length && this.isEmpty(answer.choice)) {
         validMove = true
         this.addPiece(this.currentPlayer, answer.choice)
@@ -78,18 +72,22 @@ class ticTacToe {
         gameOver = this.checkWinner(this.currentPlayer, answer.choice)
       }
 
-      !this.noClear && this.header()
+      !this.noClear && this.header() // display header
+
       if (!gameOver) {
+        // game not over, update player, and keep playing
         validMove && (this.currentPlayer = this.nextPlayer())
         this.invalidMove = !validMove
         this.play()
       } else {
+        // game over, display final board and winner
         this.currentPlayer = this.nextPlayer()
         this.invalidMove = false
         this.displayBoard()
         this.winner ? console.log(`${this.color(this.winner)} wins.\n`) : console.log('It\'s a tie.\n')
 
-        inquirer.prompt(questions.playAgain()).then(answer => {
+        // ask if user wants to play again
+        inquirer.prompt(this.questions.playAgain()).then(answer => {
           if (answer.choice.match(/^y|yes/i)) {
             this.init(this.size)
             !this.noClear && this.header()
@@ -102,12 +100,12 @@ class ticTacToe {
     })
   }
 
-  addPiece (player, colRow) {
+  addPiece (player, colRow) { // add piece to board
     this.board[this.getIndex(colRow)] = player
     this.moveCounter++
   }
 
-  checkWinner (player, colRow) {
+  checkWinner (player, colRow) { // check for winner
     log('checkWinner', player, colRow)
     let gameOver = false
 
@@ -128,7 +126,7 @@ class ticTacToe {
     return gameOver
   }
 
-  checkRow (player, index) {
+  checkRow (player, index) { // check for row of index matching player regex
     log('checkRow', player, index)
     let row = Math.floor(index / this.size)
     let re = new RegExp(player)
@@ -143,7 +141,7 @@ class ticTacToe {
     return true
   }
 
-  checkCol (player, index) {
+  checkCol (player, index) { // check for column of index matching player regex
     log('checkCol', player, index)
     let col = index % this.size
     let re = new RegExp(player)
@@ -158,7 +156,7 @@ class ticTacToe {
     return true
   }
 
-  checkDiag (player, index) {
+  checkDiag (player, index) { // check for diag of index (if it exists) matching player regex
     log('checkDiag', player, index)
     let row = Math.floor(index / this.size)
     let col = index % this.size
@@ -192,12 +190,12 @@ class ticTacToe {
     return false
   }
 
-  checkPossibilities (currentPlayer, nextPlayer) {
+  checkPossibilities (currentPlayer, nextPlayer) { // check for next possible moves to detect tie
     log('checkPossibilities', currentPlayer, nextPlayer)
     // one of the players need to be able to win
     //   the player can place a piece in non-losing spot
     let player = nextPlayer
-    console.log('... player', player)
+    log('... player', player)
     for (let i = 0; i < this.size * this.size; i += this.size + 1) {
       if (this.checkCol(`${player}|\\s`, i) ||
           this.checkRow(`${player}|\\s`, i) ||
@@ -207,14 +205,16 @@ class ticTacToe {
       }
     }
     let savedBoard = this.board
-    player = currentPlayer
+    log('... other player', currentPlayer) // O, nextPlayer is X
     let winPossible = false
-    for (let c = 0; c < this.size; c++) {
+    for (let c = 0; c < this.size * this.size; c++) {
       if (this.board[c] === ' ') {
+        log('   ... adding piece to', c, nextPlayer)
         this.board[c] = nextPlayer
         if (this.checkPossibilities(nextPlayer, currentPlayer)) {
           winPossible = true
         }
+        log('   ... removing piece from', c)
         this.board[c] = ' '
         if (winPossible) { break }
       }
@@ -224,7 +224,7 @@ class ticTacToe {
     return winPossible
   }
 
-  displayBoard () {
+  displayBoard () { // display board
     process.stdout.write(`\nCurrent Board:\n`)
     process.stdout.write('\n   ')
     for (let c = 65; c < 65 + this.size; c++) {
@@ -254,7 +254,7 @@ class ticTacToe {
     process.stdout.write('+\n\n')
   }
 
-  getIndex (colRow) {
+  getIndex (colRow) { // get index from column/row letter/number
     colRow = colRow.toUpperCase()
     let col = colRow.charCodeAt(0) - 65
     let row = colRow.charCodeAt(1) - 49
@@ -265,10 +265,10 @@ class ticTacToe {
     return col + row * this.size
   }
 
-  isEmpty (colRow) {
+  isEmpty (colRow) { // check if column/row is empty
     return this.board[this.getIndex(colRow)] === ' '
   }
 }
 
 const game = new ticTacToe() // tie detection only works with n = 3
-game.play()
+game.play() // start game

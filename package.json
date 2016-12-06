@@ -1,0 +1,33 @@
+{
+  "name": "tic-tac-toe",
+  "version": "1.0.0",
+  "description": "Tic-tac-toe command line game",
+  "main": "tic-tac-toe.js",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "clear": "0.0.1",
+    "clui": "^0.3.1",
+    "figlet": "^1.2.0",
+    "inquirer": "^1.2.3",
+    "prompt": "^1.0.0",
+    "readline": "^1.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/therealgilles/tic-tac-toe.git"
+  },
+  "keywords": [
+    "game",
+    "tic-tac-toe"
+  ],
+  "author": "Gilles Bouvier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/therealgilles/tic-tac-toe/issues"
+  },
+  "homepage": "https://github.com/therealgilles/tic-tac-toe#readme"
+}

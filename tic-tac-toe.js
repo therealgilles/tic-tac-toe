@@ -43,7 +43,7 @@ class ticTacToe {
     this.board = []
     for (let i = 0; i < this.size * this.size; i++) { this.board[i] = ' ' }
     this.currentPlayer = Math.random() >= 0.5 ? 'X' : 'O'
-    this.tie = false
+    this.draw = false
     this.invalidMove = false
     this.moveCounter = 0
     this.winner = null
@@ -84,7 +84,7 @@ class ticTacToe {
         this.currentPlayer = this.nextPlayer()
         this.invalidMove = false
         this.displayBoard()
-        this.winner ? console.log(`${this.color(this.winner)} wins.\n`) : console.log('It\'s a tie.\n')
+        this.winner ? console.log(`${this.color(this.winner)} wins.\n`) : console.log('It\'s a draw.\n')
 
         // ask if user wants to play again
         inquirer.prompt(this.questions.playAgain()).then(answer => {
@@ -116,7 +116,7 @@ class ticTacToe {
     } else if (!this.checkPossibilities(this.currentPlayer, this.nextPlayer())) {
       log('no more possibilities')
       //gameOver = true // we could stop the game here
-      this.tie = true
+      this.draw = true
     }
 
     if (this.moveCounter === this.size * this.size) {
@@ -240,7 +240,7 @@ class ticTacToe {
         process.stdout.write(` ${this.color(this.board[i * this.size + j])} |`)
       }
       if (i === Math.floor((this.size - 1) / 2) - 1) {
-        this.tie && process.stdout.write(chalk.red('   Tie detected!'))
+        this.draw && process.stdout.write(chalk.red('   Draw detected!'))
         this.invalidMove && process.stdout.write(chalk.red('   Invalid move, try again...'))
       }
       if (!this.winner && i === Math.floor((this.size - 1) / 2)) {
@@ -270,5 +270,5 @@ class ticTacToe {
   }
 }
 
-const game = new ticTacToe() // tie detection only works with n = 3
+const game = new ticTacToe() // Draw detection only works with n = 3
 game.play() // start game
